@@ -1,4 +1,4 @@
-name: Build and Deploy
+ugname: Build and Deploy
 on:
   push:
     branches:
@@ -83,7 +83,7 @@ jobs:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }} # This should be your database connection string
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          supabase db push
+          supabase db push --debug
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@4.1.1
