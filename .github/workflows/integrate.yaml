@@ -67,6 +67,13 @@ jobs:
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           supabase login --token "${{ secrets.SUPABASE_ACCESS_TOKEN }}"
+      # --------------------------
+      # ✅ Link Supabase Project (Fix Missing Ref Error)
+      # --------------------------
+      - name: Link Supabase Project
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
 
       # --------------------------
       # ✅ Run Supabase Migrations
