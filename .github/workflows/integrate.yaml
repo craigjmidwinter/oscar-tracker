@@ -33,17 +33,28 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
 
-      # --------------------------
-      # ✅ Install Supabase CLI (Homebrew for macOS/Linux)
-      # --------------------------
-      - name: Install Homebrew (if missing)
+      - name: Install Homebrew (if missing) and Configure PATH
         run: |
           if ! command -v brew &> /dev/null; then
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> $HOME/.bashrc
+            echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> $HOME/.profile
+            eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           fi
+        shell: bash
 
+      - name: Verify Homebrew Installation
+        run: |
+          echo "Homebrew location: $(which brew)"
+          brew --version
+
+      # --------------------------
+      # ✅ Install Supabase CLI via Homebrew
+      # --------------------------
       - name: Install Supabase CLI via Homebrew
-        run: brew install supabase/tap/supabase
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install supabase/tap/supabase
       # --------------------------
       # ✅ Authenticate Supabase
       # --------------------------
