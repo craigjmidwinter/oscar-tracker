@@ -10,8 +10,9 @@ interface Props {
 
 export function CategoryCard({category, seenMovies, updatePick, userPicks}: Props) {
 
-    const total = category.nominees.length
-    const watched = category.nominees.filter(n => seenMovies.has(n.movie.id)).length
+
+    const total = category.nominees?.length || 0
+    const watched = category.nominees?.filter(n => seenMovies.has(n.movie.id)).length || 0
     const progress = Math.round((watched / total) * 100)
     return (
         <div
@@ -23,7 +24,7 @@ export function CategoryCard({category, seenMovies, updatePick, userPicks}: Prop
 
             {/* Nominees List */}
             <div className="space-y-2">
-                {category.nominees.map(nominee => (
+                {category.nominees?.map(nominee => (
                     <div
                         key={nominee.id}
                         className={`group p-3 rounded-lg flex items-start justify-between ${

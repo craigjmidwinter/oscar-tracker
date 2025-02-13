@@ -87,6 +87,8 @@ export function CategoryList({nominees, seenMovies}: {
                 map.set(category.id, {
                     id: category.id,
                     name: category.name,
+                    created_at: category.created_at ?? null, // Ensure created_at exists
+                    type: category.type ?? null, // Ensure type exists
                     nominees: []
                 })
             }
@@ -95,7 +97,9 @@ export function CategoryList({nominees, seenMovies}: {
         }, new Map<string, {
             id: string;
             name: string;
-            nominees: Nominee[]
+            created_at: string | null;
+            type: string | null;
+            nominees: Nominee[];
         }>()).values()
     )
     return (

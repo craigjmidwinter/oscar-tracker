@@ -13,51 +13,69 @@ type SeenMoviesContextType = {
 const SeenMoviesContext = createContext<SeenMoviesContextType | undefined>(undefined)
 
 export function SeenMoviesProvider({ children }: { children: React.ReactNode }) {
-    const auth = useAuth() // ✅ Get user safely
+    const { user } = useAuth()
     const [seenMovies, setSeenMovies] = useState<Set<string>>(new Set())
 
     useEffect(() => {
         const loadSeenMovies = async () => {
-            if (!auth?.user) return // ✅ Ensure auth is ready before calling useAuth()
+            if (user) {
+                // ✅ Load movies from Supabase when signed in
+                const { data, error } = await supabase
+                    .from('user_seen_movies')
+                    .select('movie_id')
+                    .eq('user_id', user.id)
 
-            const { data, error } = await supabase
-                .from('user_seen_movies')
-                .select('movie_id')
-                .eq('user_id', auth.user.id)
+                if (error) {
+                    console.error('Failed to load seen movies:', error)
+                    return
+                }
 
-            if (error) {
-                console.error('Failed to load seen movies:', error)
-                return
+                setSeenMovies(new Set(data.map(entry => entry.movie_id)))
+            } else {
+                // ✅ Load movies from local storage when signed out
+                const localMovies = JSON.parse(localStorage.getItem('seenMovies') || '[]') as string[]
+                setSeenMovies(new Set(localMovies))
             }
-
-            setSeenMovies(new Set(data.map(entry => entry.movie_id)))
         }
 
         loadSeenMovies()
-    }, [auth?.user]) // ✅ Runs only when user is available
+    }, [user]) // Reloads when the user logs in or out
 
     const toggleMovieSeen = async (movieId: string) => {
-        if (!auth?.user) return
+        setSeenMovies(prev => {
+            const newSet = new Set(prev)
+            const isSeen = newSet.has(movieId)
 
-        const newSet = new Set(seenMovies)
-        const isSeen = newSet.has(movieId)
-
-        if (isSeen) {
-            newSet.delete(movieId)
-        } else {
-            newSet.add(movieId)
-        }
-
-        setSeenMovies(newSet)
-
-        try {
             if (isSeen) {
-                await supabase.from('user_seen_movies').delete().eq('user_id', auth.user.id).eq('movie_id', movieId)
+                newSet.delete(movieId)
             } else {
-                await supabase.from('user_seen_movies').insert([{ user_id: auth.user.id, movie_id: movieId }])
+                newSet.add(movieId)
             }
-        } catch (error) {
-            console.error('Failed to update movie status:', error)
+
+            // ✅ Ensure React detects the change by setting a new Set reference
+            return new Set(newSet)
+        })
+
+        if (user) {
+            // ✅ Sync with Supabase when logged in
+            try {
+                if (seenMovies.has(movieId)) {
+                    await supabase
+                        .from('user_seen_movies')
+                        .delete()
+                        .eq('user_id', user.id)
+                        .eq('movie_id', movieId)
+                } else {
+                    await supabase
+                        .from('user_seen_movies')
+                        .insert([{ user_id: user.id, movie_id: movieId }])
+                }
+            } catch (error) {
+                console.error('Failed to update movie status:', error)
+            }
+        } else {
+            // ✅ Store in localStorage when logged out
+            localStorage.setItem('seenMovies', JSON.stringify([...seenMovies]))
         }
     }
 

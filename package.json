@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-types": "powershell -Command \"supabase gen types typescript --local | Out-File -FilePath ./src/types/schema.ts -Encoding utf8\""
   },
   "dependencies": {
     "@fontsource/inter": "^5.1.1",
