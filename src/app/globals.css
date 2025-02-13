@@ -2,20 +2,122 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@layer utilities {
+    /* Modern mosaic layout utilities */
+    .mosaic-columns {
+        column-gap: 1rem;
+    }
+
+    .mosaic-columns > * {
+        display: inline-block;
+        width: 100%;
+    }
+
+    /* Smooth shadow transitions */
+    .shadow-transition {
+        transition: box-shadow 0.2s ease-in-out;
+    }
+
+    /* Better text wrapping */
+    .text-balance {
+        text-wrap: balance;
+    }
+
+    /* Custom scrollbar */
+    .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: theme('colors.gray.300') theme('colors.white');
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: theme('colors.white');
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: theme('colors.gray.300');
+        border-radius: 4px;
+        border: 2px solid theme('colors.white');
+    }
+
+    /* Fade-in animation */
+    @keyframes fade-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fade-in {
+        animation: fade-in 0.3s ease-out;
+    }
+
+    /* Button press effect */
+    .button-press:active {
+        transform: scale(0.98);
+    }
+
+    /* Gradient text */
+    .text-gradient {
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Custom base styles */
+@layer base {
+    body {
+        @apply bg-gray-50 text-gray-900;
+    }
+
+    h1, h2, h3 {
+        @apply font-semibold text-gray-900;
+    }
+
+    a {
+        @apply text-blue-600 hover:text-blue-700 transition-colors;
+    }
+
+    button {
+        @apply transition-all duration-200;
+    }
+
+    input, textarea {
+        @apply bg-white border border-gray-300 rounded-lg px-3 py-2
+        focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+        focus:outline-none transition-all;
+    }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom components */
+@layer components {
+    .card {
+        @apply bg-white rounded-xl shadow-lg p-4 border border-gray-100
+        hover:shadow-xl transition-shadow break-inside-avoid;
+    }
+
+    .progress-bar {
+        @apply h-2 bg-gray-100 rounded-full overflow-hidden;
+    }
+
+    .progress-bar-fill {
+        @apply h-full bg-gradient-to-r from-blue-400 to-blue-600
+        rounded-full transition-all duration-500;
+    }
+
+    .nominee-card {
+        @apply p-3 rounded-lg flex items-start justify-between
+        bg-gray-50 hover:bg-gray-100 transition-colors;
+    }
+
+    .action-button {
+        @apply p-2 rounded-md transition-colors bg-gray-200
+        text-gray-600 hover:bg-blue-100;
+    }
+
+    .action-button.selected {
+        @apply bg-blue-500 text-white;
+    }
 }

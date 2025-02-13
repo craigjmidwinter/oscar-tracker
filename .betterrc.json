@@ -1,0 +1,6 @@
+{
+  "input": "./src/types/schema.ts",
+  "output": "./src/types/betterSchema.ts",
+  "force": true,
+  "singular": true
+}
