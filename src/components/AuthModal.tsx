@@ -111,7 +111,7 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
                 {/* Modal Footer */}
                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
                     <p className="text-sm text-gray-500">
-                        We&pos;ll send you a magic link to sign in. No password required.
+                        {"We'll send you a magic link to sign in. No password required."}
                     </p>
                 </div>
             </div>

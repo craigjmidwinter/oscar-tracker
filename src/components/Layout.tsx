@@ -1,51 +1,33 @@
-"use client"
-import {useEffect, useState} from "react"
+'use client'
+import {  useState } from "react"
 import { useAuth } from "@/context/auth"
 import { AuthModal } from "./AuthModal"
 import { useSeenMovies } from "@/context/SeenMoviesContext"
 import type { Nominee } from "@/types/types"
-import {createClient} from "@supabase/supabase-js";
-import {Database} from "@/types/schema";
 
-export function Layout({
-                           MovieListComponent,
-                           CategoryListComponent,
-                       }: {
+interface LayoutProps{
     MovieListComponent: React.ComponentType<{
         seenMovies: Set<string>
         toggleMovieSeen: (id: string) => void
         nominees: Nominee[]
-    }>
+    }>,
     CategoryListComponent: React.ComponentType<{
         seenMovies: Set<string>
         nominees: Nominee[]
-    }>
-}) {
+    }>,
+
+    nominees: Nominee[]
+}
+export function Layout({
+                           MovieListComponent,
+                           CategoryListComponent,
+                           nominees
+                       }: LayoutProps) {
     const { user, signOut } = useAuth()
     const { seenMovies, toggleMovieSeen } = useSeenMovies()
     const [showAuth, setShowAuth] = useState(false)
-    const [nominees, setNominees] = useState<Nominee[]>([])
 
-    useEffect(() => {
-        const supabase = createClient<Database>(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
-        const fetchNominees = async () => {
-            const { data } = await supabase
-                .from('nominees')
-                .select(`
-          id,
-          name,
-          movie:movies!inner(id, title),
-          category:categories!inner(id, name)
-        `)
 
-            setNominees(data as Nominee[])
-        }
-
-        fetchNominees()
-    }, []);
     return (
         <div className="min-h-screen bg-gray-50">
             {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
@@ -53,16 +35,13 @@ export function Layout({
             {/* Header */}
             <header className="bg-white shadow-sm">
                 <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-                    <h1 className="text-xl font-semibold text-gray-900">
-                        🏆 Awards Tracker
-                    </h1>
-
+                    <h1 className="text-xl font-semibold text-gray-900">🏆 Awards Tracker</h1>
                     <div className="flex items-center gap-3">
                         {user ? (
                             <>
-                                <span className="text-sm text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full">
-                                    👋 {user.email?.split('@')[0]}
-                                </span>
+                <span className="text-sm text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full">
+                  👋 {user.email?.split('@')[0]}
+                </span>
                                 <button
                                     onClick={signOut}
                                     className="text-sm text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-full transition-colors"
@@ -88,14 +67,18 @@ export function Layout({
                     {/* Movie List Panel */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-100">
                         <div className="p-4 border-b border-gray-100">
-                            <h2 className="text-lg font-semibold text-gray-900">
-                                🎬 Movie List
-                            </h2>
+                            <h2 className="text-lg font-semibold text-gray-900">🎬 Movie List</h2>
                         </div>
                         <div className="p-4">
                             <MovieListComponent
                                 seenMovies={seenMovies}
-                                toggleMovieSeen={toggleMovieSeen}
+                                toggleMovieSeen={(movieId) => {
+                                    if (!user) {
+                                        setShowAuth(true)
+                                        return
+                                    }
+                                    toggleMovieSeen(movieId)
+                                }}
                                 nominees={nominees}
                             />
                         </div>
@@ -104,9 +87,7 @@ export function Layout({
                     {/* Categories Panel */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-100">
                         <div className="p-4 border-b border-gray-100">
-                            <h2 className="text-lg font-semibold text-gray-900">
-                                🏅 Categories
-                            </h2>
+                            <h2 className="text-lg font-semibold text-gray-900">🏅 Categories</h2>
                         </div>
                         <div className="p-4">
                             <CategoryListComponent
