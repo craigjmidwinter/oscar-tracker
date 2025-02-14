@@ -5,7 +5,7 @@ import { CategoryList } from "@/components/CategoryList"
 import { AuthProvider } from "@/context/auth"
 import { SeenMoviesProvider } from "@/context/SeenMoviesContext"
 import { Database } from "@/types/schema"
-import {Category, Movie, Nominee} from "@/types/types"
+import {  Nominee} from "@/types/types"
 
 export default async function OscarPicks() {
     const supabase = createClient<Database>(
@@ -13,7 +13,7 @@ export default async function OscarPicks() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
 
-    const { data: rawNominees } = await supabase
+    const { data: nominees } = await supabase
         .from('nominees')
         .select(`
       id,
@@ -21,24 +21,6 @@ export default async function OscarPicks() {
       movie:movies!inner(id, title),
       category:categories!inner(id, name)
     `)
-
-    // ✅ Transform to match the Nominee type
-    const nominees: Nominee[] = rawNominees?.map(nominee => ({
-        id: nominee.id,
-        name: nominee.name,
-        movie: {
-            id: nominee.movie?.id ?? "",
-            title: nominee.movie?.title ?? "Unknown",
-        } as Movie,
-        category: {
-            id: nominee.category?.id ?? "",
-            name: nominee.category?.name ?? "Unknown",
-        } as Category,
-        category_id: nominee.category?.id ?? null,
-        created_at: null,
-        is_winner: null, // Default value (not stored in DB)
-        movie_id: nominee.movie?.id ?? null
-    })) ?? []
 
     if (!nominees) {
         return <div>Loading...</div>
@@ -50,7 +32,7 @@ export default async function OscarPicks() {
                 <Layout
                     MovieListComponent={MovieList}
                     CategoryListComponent={CategoryList}
-                    nominees={nominees}
+                    nominees={nominees as Nominee[]}
                 />
             </SeenMoviesProvider>
         </AuthProvider>
