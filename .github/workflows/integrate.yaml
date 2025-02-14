@@ -81,6 +81,7 @@ jobs:
       - name: Run Supabase Migrations
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }} # This should be your database connection string
+          SUPABASE_PASSWORD: ${{ secrets.SUPABASE_PASSWORD }}
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           supabase db push --debug
