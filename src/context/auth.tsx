@@ -19,11 +19,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const value = useMemo(() => ({
         user,
         signIn: async (email: string) => {
+            const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`;
             const { error } = await supabase.auth.signInWithOtp({
                 email,
-                options: { emailRedirectTo: `${location.origin}/auth/callback` }
-            })
-            if (error) throw error
+                options: { emailRedirectTo: redirectUrl }
+            });
+            if (error) throw error;
         },
         signOut: async () => {
             await supabase.auth.signOut()
