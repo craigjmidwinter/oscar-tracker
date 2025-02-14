@@ -13,7 +13,7 @@ export default async function OscarPicks() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
 
-    const { data: nominees } = await supabase
+    const { data: nominees, error } = await supabase
         .from('nominees')
         .select(`
       id,
@@ -21,6 +21,15 @@ export default async function OscarPicks() {
       movie:movies!inner(id, title),
       category:categories!inner(id, name)
     `)
+
+    if (error) {
+        return (
+            <div>
+                <h1>Error fetching nominees</h1>
+                <pre>{JSON.stringify(error, null, 2)}</pre>
+            </div>
+        )
+    }
 
     return (
         <AuthProvider>
