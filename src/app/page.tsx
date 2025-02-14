@@ -22,10 +22,6 @@ export default async function OscarPicks() {
       category:categories!inner(id, name)
     `)
 
-    if (!nominees) {
-        return <div>Loading...</div>
-    }
-
     return (
         <AuthProvider>
             <SeenMoviesProvider>
