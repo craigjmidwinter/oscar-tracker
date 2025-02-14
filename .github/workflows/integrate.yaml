@@ -6,6 +6,10 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_REF }}
     defaults:
       run:
         working-directory: ./
@@ -22,6 +26,9 @@ jobs:
           path: ${{ github.workspace }}/.next/cache
           key: ${{ runner.os }}-nextjs-v3-${{ hashFiles('**/package-lock.json') }}
 
+      - uses: supabase/setup-cli@v1
+      - run: supabase link --project-ref $PROJECT_ID
+      - run: supabase db push
       - name: Install and Build 🔧
         uses: actions/setup-node@v1
         with:
@@ -30,33 +37,10 @@ jobs:
       - run: yarn build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-
-      # --------------------------
-      # ✅ Install Supabase CLI (Official Action)
-      # --------------------------
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}      
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@4.1.1
         with:
-          version: latest  # Use a specific version if needed
+          branch: gh-pages
+          folder: dist
 
-      # --------------------------
-      # ✅ Authenticate with Supabase
-      # --------------------------
-      - name: Login to Supabase
-        run: supabase login --token "${{ secrets.SUPABASE_ACCESS_TOKEN }}"
-
-      # --------------------------
-      # ✅ Link Supabase Project
-      # --------------------------
-      - name: Link Supabase Project
-        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
-
-      # --------------------------
-      # ✅ Run Supabase Migrations (Correct Password Handling)
-      # --------------------------
-      - name: Run Supabase Migrations
-        run: |
-          PGPASSWORD="${{ secrets.SUPABASE_PASSWORD }}" supabase db push --db-url "postgresql://postgres:${{ secrets.SUPABASE_PASSWORD }}@aws-0-us-west-1.pooler.supabase.com:6543/postgres?sslmode=disable"
-        env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
