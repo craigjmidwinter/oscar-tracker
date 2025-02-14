@@ -1,14 +1,15 @@
 "use client"
-import { useState } from "react"
+import {useEffect, useState} from "react"
 import { useAuth } from "@/context/auth"
 import { AuthModal } from "./AuthModal"
 import { useSeenMovies } from "@/context/SeenMoviesContext"
 import type { Nominee } from "@/types/types"
+import {createClient} from "@supabase/supabase-js";
+import {Database} from "@/types/schema";
 
 export function Layout({
                            MovieListComponent,
                            CategoryListComponent,
-                           nominees
                        }: {
     MovieListComponent: React.ComponentType<{
         seenMovies: Set<string>
@@ -19,12 +20,32 @@ export function Layout({
         seenMovies: Set<string>
         nominees: Nominee[]
     }>
-    nominees: Nominee[]
 }) {
     const { user, signOut } = useAuth()
     const { seenMovies, toggleMovieSeen } = useSeenMovies()
     const [showAuth, setShowAuth] = useState(false)
+    const [nominees, setNominees] = useState<Nominee[]>([])
 
+    useEffect(() => {
+        const supabase = createClient<Database>(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+        const fetchNominees = async () => {
+            const { data } = await supabase
+                .from('nominees')
+                .select(`
+          id,
+          name,
+          movie:movies!inner(id, title),
+          category:categories!inner(id, name)
+        `)
+
+            setNominees(data as Nominee[])
+        }
+
+        fetchNominees()
+    }, []);
     return (
         <div className="min-h-screen bg-gray-50">
             {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
