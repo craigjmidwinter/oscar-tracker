@@ -13,6 +13,7 @@ export function PageHeader(props: {
     return (
         <header className="bg-white shadow-md py-4">
             <div className="container mx-auto px-4 flex justify-between items-center">
+
                 <h1 className="text-4xl font-bold header-font">oscar-tracker.com</h1>
 
                 <div className="flex items-center gap-4">
