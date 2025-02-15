@@ -3,15 +3,19 @@
 import { useState } from "react"
 import type { Nominee } from "@/types/types"
 
-export function MovieList({
-                              seenMovies,
-                              toggleMovieSeen,
-                              nominees
-                          }: {
+interface MovieListProps {
     seenMovies: Set<string>;
     toggleMovieSeen: (id: string) => void;
     nominees: Nominee[];
-}) {
+    readOnly?: boolean;
+}
+
+export function MovieList({
+                              seenMovies,
+                              toggleMovieSeen,
+                              nominees,
+                              readOnly = false,
+                          }: MovieListProps) {
     const moviesMap = new Map<string, { id: string; title: string; nominationCount: number }>()
 
     nominees.forEach(nominee => {
@@ -40,11 +44,10 @@ export function MovieList({
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
                 <span className="text-sm font-medium text-gray-700">Sort by:</span>
                 <select
-                    className="text-sm text-gray-700 bg-white border border-gray-300 rounded-md px-2 py-1
-                    hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500
-                    focus:border-blue-500 transition-all"
+                    className="text-sm text-gray-700 bg-white border border-gray-300 rounded-md px-2 py-1 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as "nominations" | "title")}
+                    disabled={readOnly}
                 >
                     <option value="nominations">Most Nominations</option>
                     <option value="title">Title (A-Z)</option>
@@ -58,14 +61,21 @@ export function MovieList({
                         key={movie.id}
                         role="button"
                         tabIndex={0}
-                        className={`group p-3 rounded-lg flex items-center justify-between cursor-pointer
-                        transition-all outline-none ${
+                        className={`group p-3 rounded-lg flex items-center justify-between cursor-pointer transition-all outline-none ${
                             seenMovies.has(movie.id)
                                 ? 'bg-green-50 border border-green-200'
                                 : 'bg-white hover:bg-gray-50 border border-gray-200'
-                        }`}
-                        onClick={() => toggleMovieSeen(movie.id)}
-                        onKeyDown={(e) => e.key === "Enter" && toggleMovieSeen(movie.id)}
+                        } ${readOnly ? 'cursor-default' : ''}`}
+                        onClick={() => {
+                            if (!readOnly) {
+                                toggleMovieSeen(movie.id)
+                            }
+                        }}
+                        onKeyDown={(e) => {
+                            if (!readOnly && e.key === "Enter") {
+                                toggleMovieSeen(movie.id)
+                            }
+                        }}
                     >
                         <div className="flex-1 min-w-0 mr-2">
                             <h3 className="text-sm font-medium text-gray-900 truncate">
@@ -79,25 +89,29 @@ export function MovieList({
                         <div className="flex-shrink-0">
                             {/* Checkbox Wrapper */}
                             <div
-                                className={`w-5 h-5 border rounded-md flex items-center justify-center
-                                transition-colors ${
+                                className={`w-5 h-5 border rounded-md flex items-center justify-center transition-colors ${
                                     seenMovies.has(movie.id)
                                         ? 'border-green-500 bg-green-500'
                                         : 'border-gray-300 group-hover:border-gray-400 bg-white'
-                                }`}
+                                } ${readOnly ? '' : 'cursor-pointer'}`}
                                 onClick={(e) => {
-                                    e.stopPropagation() // ✅ Prevents the checkbox from bubbling to the parent div
-                                    toggleMovieSeen(movie.id)
+                                    e.stopPropagation() // Prevent parent onClick from firing
+                                    if (!readOnly) {
+                                        toggleMovieSeen(movie.id)
+                                    }
                                 }}
                             >
                                 <input
                                     type="checkbox"
                                     checked={seenMovies.has(movie.id)}
                                     onChange={(e) => {
-                                        e.stopPropagation() // ✅ Prevents parent onClick from firing
-                                        toggleMovieSeen(movie.id)
+                                        e.stopPropagation() // Prevent parent onClick from firing
+                                        if (!readOnly) {
+                                            toggleMovieSeen(movie.id)
+                                        }
                                     }}
                                     className="opacity-0 absolute"
+                                    disabled={readOnly}
                                 />
                                 {seenMovies.has(movie.id) && (
                                     <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

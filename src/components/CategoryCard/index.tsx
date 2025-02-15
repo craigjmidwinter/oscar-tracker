@@ -1,26 +1,33 @@
-import {Category} from "@/types/types";
-import {CategoryCardHeader} from "@/components/CategoryCard/Header";
+// src/components/CategoryCard/index.tsx
+import { Category } from "@/types/types";
 
 interface Props {
     category: Category;
     seenMovies: Set<string>;
     updatePick: (categoryId: string, nomineeId: string, type: "think" | "hope") => void;
-    userPicks: { [categoryId: string]: { think: string | null; hope: string | null } }
+    userPicks: { [categoryId: string]: { think: string | null; hope: string | null } };
+    readOnly?: boolean;
 }
 
-export function CategoryCard({category, seenMovies, updatePick, userPicks}: Props) {
+export function CategoryCard({ category, seenMovies, updatePick, userPicks, readOnly = false }: Props) {
+    const total = category.nominees?.length || 0;
+    const watched = category.nominees?.filter(n => seenMovies.has(n.movie.id)).length || 0;
+    const progress = Math.round((watched / total) * 100);
 
+    // Add extra classes if the user has watched all nominees
+    const containerClasses = `
+    break-inside-avoid p-4 mb-4 rounded-xl shadow-lg
+    ${watched === total ? 'bg-gradient-to-r from-yellow-200 to-yellow-400 border-4 border-yellow-500' : 'bg-white border border-gray-100'}
+  `;
 
-    const total = category.nominees?.length || 0
-    const watched = category.nominees?.filter(n => seenMovies.has(n.movie.id)).length || 0
-    const progress = Math.round((watched / total) * 100)
     return (
-        <div
-            key={category.id}
-            className="break-inside-avoid bg-white rounded-xl shadow-lg p-4 mb-4 border border-gray-100"
-            // style={{columnBreakInside: 'avoid'}}
-        >
-            <CategoryCardHeader name={category.name} watched={watched} total={total} progress={progress}/>
+        <div key={category.id} className={containerClasses}>
+            {/* Header */}
+            {/* You might update your CategoryCardHeader as needed */}
+            <div className="mb-2">
+                <h3 className="text-lg font-bold">{category.name}</h3>
+                <p className="text-xs text-gray-600">{watched} of {total} watched ({progress}%)</p>
+            </div>
 
             {/* Nominees List */}
             <div className="space-y-2">
@@ -46,7 +53,8 @@ export function CategoryCard({category, seenMovies, updatePick, userPicks}: Prop
                         {/* Action Buttons */}
                         <div className="flex gap-1 flex-shrink-0">
                             <button
-                                onClick={() => updatePick(category.id, nominee.id, "think")}
+                                onClick={() => !readOnly && updatePick(category.id, nominee.id, "think")}
+                                disabled={readOnly}
                                 className={`p-2 rounded-md transition-colors ${
                                     userPicks[category.id]?.think === nominee.id
                                         ? 'bg-blue-500 text-white'
@@ -56,7 +64,8 @@ export function CategoryCard({category, seenMovies, updatePick, userPicks}: Prop
                                 <span className="text-sm block">🧠</span>
                             </button>
                             <button
-                                onClick={() => updatePick(category.id, nominee.id, "hope")}
+                                onClick={() => !readOnly && updatePick(category.id, nominee.id, "hope")}
+                                disabled={readOnly}
                                 className={`p-2 rounded-md transition-colors ${
                                     userPicks[category.id]?.hope === nominee.id
                                         ? 'bg-pink-500 text-white'
@@ -70,5 +79,5 @@ export function CategoryCard({category, seenMovies, updatePick, userPicks}: Prop
                 ))}
             </div>
         </div>
-    )
+    );
 }

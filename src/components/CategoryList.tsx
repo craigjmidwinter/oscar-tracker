@@ -1,32 +1,38 @@
 // app/components/CategoryList.tsx
 'use client'
 
-import {useEffect, useState} from "react"
-import type {Nominee} from "@/types/types"
-import {supabase} from "@/utils/supabase"
-import {useAuth} from "@/context/auth"
-import {CategoryCard} from "@/components/CategoryCard";
+import { useEffect, useState } from "react"
+import type { Nominee } from "@/types/types"
+import { supabase } from "@/utils/supabase"
+import { useAuth } from "@/context/auth"
+import { CategoryCard } from "@/components/CategoryCard"
 
-export function CategoryList({nominees, seenMovies}: {
-    nominees: Nominee[];
+interface CategoryListProps {
+    nominees: Nominee[]
     seenMovies: Set<string>
-}) {
-    const {user} = useAuth()
+    readOnly?: boolean
+    sharedUserId?: string
+}
+
+export function CategoryList({ nominees, seenMovies, readOnly = false, sharedUserId }: CategoryListProps) {
+    const { user } = useAuth()
     const [userPicks, setUserPicks] = useState<{
         [categoryId: string]: {
-            think: string | null;
+            think: string | null
             hope: string | null
         }
     }>({})
 
     useEffect(() => {
-        if (!user?.id) return
+        // Determine which user id to load picks for:
+        const idToLoad = readOnly ? sharedUserId : user?.id
+        if (!idToLoad) return
 
         const fetchUserPicks = async () => {
-            const {data, error} = await supabase
+            const { data, error } = await supabase
                 .from('user_picks')
                 .select('category_id, think_will_win, hope_will_win')
-                .eq('user_id', user.id)
+                .eq('user_id', idToLoad)
 
             if (error) {
                 console.error("Error fetching user picks:", error)
@@ -45,10 +51,11 @@ export function CategoryList({nominees, seenMovies}: {
         }
 
         fetchUserPicks()
-    }, [user?.id])
+    }, [user?.id, readOnly, sharedUserId])
 
     const updatePick = async (categoryId: string, nomineeId: string, type: "think" | "hope") => {
-        if (!user?.id) return
+        // Do nothing if readOnly or no appropriate user id.
+        if (readOnly || !user?.id) return
 
         setUserPicks(prev => ({
             ...prev,
@@ -80,6 +87,7 @@ export function CategoryList({nominees, seenMovies}: {
         }
     }
 
+    // Group nominees into categories.
     const categories = Array.from(
         nominees.reduce((map, nominee) => {
             const category = nominee.category
@@ -87,8 +95,8 @@ export function CategoryList({nominees, seenMovies}: {
                 map.set(category.id, {
                     id: category.id,
                     name: category.name,
-                    created_at: category.created_at ?? null, // Ensure created_at exists
-                    type: category.type ?? null, // Ensure type exists
+                    created_at: category.created_at ?? null,
+                    type: category.type ?? null,
                     nominees: []
                 })
             }
@@ -102,20 +110,19 @@ export function CategoryList({nominees, seenMovies}: {
             nominees: Nominee[];
         }>()).values()
     )
+
     return (
         <div className="columns-1 md:columns-2 lg:columns-3 gap-4 p-4 w-full space-y-4">
-            {categories.map((category, i) => {
-
-                return (
-                    <CategoryCard
-                        key={i}
-                        category={category}
-                        seenMovies={seenMovies}
-                        updatePick={updatePick}
-                        userPicks={userPicks}
-                    />
-                )
-            })}
+            {categories.map((category, i) => (
+                <CategoryCard
+                    key={i}
+                    category={category}
+                    seenMovies={seenMovies}
+                    updatePick={updatePick}
+                    userPicks={userPicks}
+                    readOnly={readOnly}
+                />
+            ))}
         </div>
     )
 }
