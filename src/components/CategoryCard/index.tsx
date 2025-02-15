@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { Category } from "@/types/types";
 import { CategoryCardHeader } from "@/components/CategoryCard/Header";
@@ -36,15 +36,21 @@ export function CategoryCard({
     }
   `;
 
+    // Check if the category has **any** picks set
+    const hasAnyPick =
+        userPicks[category.id]?.think != null || userPicks[category.id]?.hope != null;
+
     return (
         <div key={category.id} className={containerClasses}>
             {/* Header */}
-            <CategoryCardHeader
-                name={category.name}
-                watched={watched}
-                total={total}
-                progress={progress}
-            />
+            <CategoryCardHeader name={category.name} watched={watched} total={total} progress={progress} />
+
+            {/* If in readOnly mode and no picks are set, show a message */}
+            {readOnly && !hasAnyPick && (
+                <p className="text-sm text-center text-gray-500 bg-gray-50 rounded-md p-3 my-2">
+                    picks not selected or not shared
+                </p>
+            )}
 
             {/* Nominees List */}
             <div className="space-y-2">
@@ -55,6 +61,28 @@ export function CategoryCard({
                     const nomineeClasses = isSeen
                         ? "bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-300"
                         : "bg-gray-50 hover:bg-gray-100";
+
+                    // Decide style for the "🧠" button
+                    const isThinkPick = userPicks[category.id]?.think === nominee.id;
+                    const thinkButtonClass = readOnly
+                        ? // In readOnly mode, if not selected, mostly transparent
+                        isThinkPick
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-200 text-gray-600 opacity-25 cursor-not-allowed"
+                        : // Normal interactive style if not readOnly
+                        isThinkPick
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-200 text-gray-600 hover:bg-blue-100";
+
+                    // Decide style for the "❤️" button
+                    const isHopePick = userPicks[category.id]?.hope === nominee.id;
+                    const hopeButtonClass = readOnly
+                        ? isHopePick
+                            ? "bg-pink-500 text-white"
+                            : "bg-gray-200 text-gray-600 opacity-25 cursor-not-allowed"
+                        : isHopePick
+                            ? "bg-pink-500 text-white"
+                            : "bg-gray-200 text-gray-600 hover:bg-pink-100";
 
                     return (
                         <div
@@ -74,24 +102,20 @@ export function CategoryCard({
                             {/* Action Buttons */}
                             <div className="flex gap-1 flex-shrink-0">
                                 <button
-                                    onClick={() => !readOnly && updatePick(category.id, nominee.id, "think")}
-                                    disabled={readOnly}
-                                    className={`p-2 rounded-md transition-colors ${
-                                        userPicks[category.id]?.think === nominee.id
-                                            ? "bg-blue-500 text-white"
-                                            : "bg-gray-200 text-gray-600 hover:bg-blue-100"
-                                    }`}
+                                    onClick={() =>
+                                        !readOnly && updatePick(category.id, nominee.id, "think")
+                                    }
+                                    disabled={readOnly && !isThinkPick} // Only clickable if not readOnly
+                                    className={`p-2 rounded-md transition-colors ${thinkButtonClass}`}
                                 >
                                     <span className="text-sm block">🧠</span>
                                 </button>
                                 <button
-                                    onClick={() => !readOnly && updatePick(category.id, nominee.id, "hope")}
-                                    disabled={readOnly}
-                                    className={`p-2 rounded-md transition-colors ${
-                                        userPicks[category.id]?.hope === nominee.id
-                                            ? "bg-pink-500 text-white"
-                                            : "bg-gray-200 text-gray-600 hover:bg-pink-100"
-                                    }`}
+                                    onClick={() =>
+                                        !readOnly && updatePick(category.id, nominee.id, "hope")
+                                    }
+                                    disabled={readOnly && !isHopePick}
+                                    className={`p-2 rounded-md transition-colors ${hopeButtonClass}`}
                                 >
                                     <span className="text-sm block">❤️</span>
                                 </button>

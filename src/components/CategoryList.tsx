@@ -22,6 +22,38 @@ export function CategoryList({ nominees, seenMovies, readOnly = false, sharedUse
         }
     }>({});
 
+    const updatePick = async (categoryId: string, nomineeId: string, type: "think" | "hope") => {
+        if (!user?.id) return
+
+        setUserPicks(prev => ({
+            ...prev,
+            [categoryId]: {
+                ...prev[categoryId],
+                [type]: prev[categoryId]?.[type] === nomineeId ? null : nomineeId
+            }
+        }))
+
+        try {
+            await supabase
+                .from('user_picks')
+                .upsert({
+                    user_id: user.id,
+                    category_id: categoryId,
+                    think_will_win: type === "think"
+                        ? userPicks[categoryId]?.think === nomineeId
+                            ? null
+                            : nomineeId
+                        : userPicks[categoryId]?.think,
+                    hope_will_win: type === "hope"
+                        ? userPicks[categoryId]?.hope === nomineeId
+                            ? null
+                            : nomineeId
+                        : userPicks[categoryId]?.hope
+                })
+        } catch (error) {
+            console.error("Failed to update pick:", error)
+        }
+    }
     useEffect(() => {
         // Determine which user id to load picks for:
         const idToLoad = readOnly ? sharedUserId : user?.id;
@@ -83,11 +115,11 @@ export function CategoryList({ nominees, seenMovies, readOnly = false, sharedUse
                     category={category}
                     seenMovies={seenMovies}
                     updatePick={async (catId, nomineeId, type) => {
-                        // Only allow updates if not readOnly
                         if (readOnly || !user?.id) return;
                         // You may consider adding debug logs here as well.
                         console.log(`Updating pick for category ${catId}, nominee ${nomineeId}, type ${type}`);
                         // Call the updatePick function from this component (if needed)
+                        updatePick(catId, nomineeId, type);
                     }}
                     userPicks={userPicks}
                     readOnly={readOnly}

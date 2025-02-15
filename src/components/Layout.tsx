@@ -59,7 +59,7 @@ export function Layout({
                     {/* Movie List Panel */}
                     <div className="bg-white rounded-lg shadow-md border border-gray-100">
                         <div className="p-4 border-b border-gray-200">
-                            <h2 className="text-2xl font-semibold text-gray-900 header-font">🎬 Movie List</h2>
+                            <h2 className="text-2xl font-semibold text-gray-900 header-font">🎬 Watch List</h2>
                         </div>
                         <div className="p-4">
                             <MovieList
