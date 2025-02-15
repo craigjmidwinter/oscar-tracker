@@ -90,15 +90,15 @@
         focus:outline-none transition-all;
     }
     @font-face {
-        font-family: "Monsante - Regular";
-        src: url("/monsante.woff") format("woff");
+        font-family: "monsante";
+        src: url("monsante.woff") format("woff");
         font-weight: normal;
         font-style: normal;
     }
 
     /* Apply Moxie Twist to headers */
     .header-font {
-        font-family: "Monsante - Regular", sans-serif;
+        font-family: "monsante", sans-serif;
     }
 }
 
