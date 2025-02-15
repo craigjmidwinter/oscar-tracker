@@ -89,6 +89,17 @@
         focus:ring-2 focus:ring-blue-500 focus:border-blue-500
         focus:outline-none transition-all;
     }
+    @font-face {
+        font-family: "Monsante - Regular";
+        src: url("/Monsante - Regular.woff") format("woff");
+        font-weight: normal;
+        font-style: normal;
+    }
+
+    /* Apply Moxie Twist to headers */
+    .header-font {
+        font-family: "Monsante - Regular", sans-serif;
+    }
 }
 
 /* Custom components */

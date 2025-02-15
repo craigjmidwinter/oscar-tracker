@@ -1,7 +1,5 @@
 //src/app/page.tsx
-import { MovieList } from "@/components/MovieList"
 import { Layout } from "@/components/Layout"
-import { CategoryList } from "@/components/CategoryList"
 import { AuthProvider } from "@/context/auth"
 import { SeenMoviesProvider } from "@/context/SeenMoviesContext"
 import {supabase} from "@/utils/supabase";
@@ -21,8 +19,6 @@ export default async function OscarPicks() {
         <AuthProvider>
             <SeenMoviesProvider>
                 <Layout
-                    MovieListComponent={MovieList}
-                    CategoryListComponent={CategoryList}
                     nominees={nominees as Nominee[]}
                 />
             </SeenMoviesProvider>

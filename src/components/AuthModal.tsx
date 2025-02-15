@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/context/auth'
 
-export function AuthModal({ onClose }: { onClose: () => void }) {
+export function AuthModal({ onCloseAction }: { onCloseAction: () => void }) {
     const { user, signIn } = useAuth()
     const [email, setEmail] = useState('')
     const [loading, setLoading] = useState(false)
@@ -12,8 +12,8 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
     const [error, setError] = useState('')
 
     useEffect(() => {
-        if (user) onClose()
-    }, [user, onClose])
+        if (user) onCloseAction()
+    }, [user, onCloseAction])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -30,7 +30,7 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
             await signIn(email)
             if (error) throw error
             setMessage('Check your email for the login link!')
-            setTimeout(onClose, 3000)
+            setTimeout(onCloseAction, 3000)
         } catch (err) {
             console.error('Login error:', err)
             setError('Failed to send login link. Please try again.')
@@ -51,7 +51,7 @@ export function AuthModal({ onClose }: { onClose: () => void }) {
                             Sign In
                         </h2>
                         <button
-                            onClick={onClose}
+                            onClick={onCloseAction}
                             className="text-gray-400 hover:text-gray-600 transition-colors"
                         >
                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
