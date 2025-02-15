@@ -1,4 +1,3 @@
-// app/components/AuthModal.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -10,9 +9,13 @@ export function AuthModal({ onCloseAction }: { onCloseAction: () => void }) {
     const [loading, setLoading] = useState(false)
     const [message, setMessage] = useState('')
     const [error, setError] = useState('')
+    const [redirectUrl, setRedirectUrl] = useState('')
 
     useEffect(() => {
         if (user) onCloseAction()
+
+        // Capture the current address bar URL as the redirect URL
+        setRedirectUrl(window.location.href)
     }, [user, onCloseAction])
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -27,7 +30,7 @@ export function AuthModal({ onCloseAction }: { onCloseAction: () => void }) {
 
         setLoading(true)
         try {
-            await signIn(email)
+            await signIn(email, redirectUrl)  // Pass redirect URL
             if (error) throw error
             setMessage('Check your email for the login link!')
             setTimeout(onCloseAction, 3000)
