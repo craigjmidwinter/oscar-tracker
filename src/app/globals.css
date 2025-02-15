@@ -91,7 +91,7 @@
     }
     @font-face {
         font-family: "Monsante - Regular";
-        src: url("/Monsante - Regular.woff") format("woff");
+        src: url("/monsante.woff") format("woff");
         font-weight: normal;
         font-style: normal;
     }
