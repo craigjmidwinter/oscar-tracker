@@ -116,3 +116,75 @@ FOR ALL
 TO authenticated
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
+
+
+-- ============================================
+-- Migration: Create user_preferences and update RLS policies
+-- ============================================
+
+-- 1. Create a new table for user preferences.
+CREATE TABLE IF NOT EXISTS user_preferences (
+                                                user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    picks_public BOOLEAN DEFAULT false,
+    seen_public BOOLEAN DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+-- 2. Update RLS on user_seen_movies:
+--    Allow public SELECT only if the owner’s preferences allow seen movies to be public.
+ALTER TABLE user_seen_movies ENABLE ROW LEVEL SECURITY;
+
+-- Drop the existing public SELECT policy if it exists.
+DROP POLICY IF EXISTS "Public can read seen movies" ON user_seen_movies;
+
+CREATE POLICY "Public can read seen movies"
+ON user_seen_movies
+FOR SELECT
+                    USING (
+                    EXISTS (
+                    SELECT 1
+                    FROM user_preferences up
+                    WHERE up.user_id = user_seen_movies.user_id
+                    AND up.seen_public = true
+                    )
+                    );
+
+-- 3. Update RLS on user_picks:
+--    Allow public SELECT only if the owner’s preferences allow picks to be public.
+ALTER TABLE user_picks ENABLE ROW LEVEL SECURITY;
+
+-- Drop the existing public SELECT policy if it exists.
+DROP POLICY IF EXISTS "Public can read user picks" ON user_picks;
+
+CREATE POLICY "Public can read user picks"
+ON user_picks
+FOR SELECT
+                    USING (
+                    EXISTS (
+                    SELECT 1
+                    FROM user_preferences up
+                    WHERE up.user_id = user_picks.user_id
+                    AND up.picks_public = true
+                    )
+                    );
+
+-- 4. (Optional) If you want to update your existing update/insert policies,
+-- you can keep them as-is so that only the owner can modify their data.
+DROP POLICY IF EXISTS "Users can manage their seen movies (updates)" ON user_seen_movies;
+
+CREATE POLICY "Users can manage their seen movies (updates)"
+ON user_seen_movies
+FOR ALL
+TO authenticated
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert or update their own picks" ON user_picks;
+
+CREATE POLICY "Users can insert or update their own picks"
+ON user_picks
+FOR ALL
+TO authenticated
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+

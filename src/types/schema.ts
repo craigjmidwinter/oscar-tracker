@@ -161,6 +161,27 @@ export type Database = {
           },
         ]
       }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          picks_public: boolean | null
+          seen_public: boolean | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          picks_public?: boolean | null
+          seen_public?: boolean | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          picks_public?: boolean | null
+          seen_public?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_seen_movies: {
         Row: {
           movie_id: string

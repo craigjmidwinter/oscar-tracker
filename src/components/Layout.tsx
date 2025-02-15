@@ -6,32 +6,24 @@ import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/auth";
 import { AuthModal } from "./AuthModal";
 import { useSeenMovies } from "@/context/SeenMoviesContext";
+import { ShareModal } from "./ShareModal";
 import type { Nominee } from "@/types/types";
+import {MovieList} from "@/components/MovieList";
+import {CategoryList} from "@/components/CategoryList";
 
 interface LayoutProps {
-    MovieListComponent: React.ComponentType<{
-        seenMovies: Set<string>;
-        toggleMovieSeen: (id: string) => void;
-        nominees: Nominee[];
-    }>;
-    CategoryListComponent: React.ComponentType<{
-        seenMovies: Set<string>;
-        nominees: Nominee[];
-        readOnly?: boolean;
-    }>;
     nominees: Nominee[];
     readOnly?: boolean;
 }
 
 export function Layout({
-                           MovieListComponent,
-                           CategoryListComponent,
                            nominees,
                            readOnly: readOnlyProp,
                        }: LayoutProps) {
     const { user, signOut } = useAuth();
     const { seenMovies, toggleMovieSeen, setSharedUserId, sharedUserId } = useSeenMovies();
     const [showAuth, setShowAuth] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
     const searchParams = useSearchParams();
     const queryUserId = searchParams.get("userId");
 
@@ -44,7 +36,10 @@ export function Layout({
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+            {showAuth && <AuthModal onCloseAction={() => setShowAuth(false)} />}
+            {showShareModal && user && (
+                <ShareModal userId={user.id} onCloseAction={() => setShowShareModal(false)} />
+            )}
             {/* Header */}
             <header className="bg-white shadow-sm">
                 <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -55,15 +50,14 @@ export function Layout({
                 <span className="text-sm text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full">
                   👋 {user.email?.split("@")[0]}
                 </span>
+                                {/* Instead of a public link, we now show a share button */}
                                 {!readOnly && (
-                                    <a
-                                        href={`/?userId=${user.id}`}
+                                    <button
+                                        onClick={() => setShowShareModal(true)}
                                         className="text-sm text-blue-600 underline"
-                                        target="_blank"
-                                        rel="noreferrer"
                                     >
-                                        Your Public Picks
-                                    </a>
+                                        Share
+                                    </button>
                                 )}
                                 <button
                                     onClick={signOut}
@@ -92,9 +86,9 @@ export function Layout({
                             <h2 className="text-lg font-semibold text-gray-900">🎬 Movie List</h2>
                         </div>
                         <div className="p-4">
-                            <MovieListComponent
+                            <MovieList
                                 seenMovies={seenMovies}
-                                toggleMovieSeen={(movieId) => {
+                                toggleMovieSeenAction={(movieId) => {
                                     if (readOnly) return;
                                     toggleMovieSeen(movieId);
                                 }}
@@ -108,10 +102,11 @@ export function Layout({
                             <h2 className="text-lg font-semibold text-gray-900">🏅 Categories</h2>
                         </div>
                         <div className="p-4">
-                            <CategoryListComponent
+                            <CategoryList
                                 seenMovies={seenMovies}
                                 nominees={nominees}
                                 readOnly={readOnly}
+                                sharedUserId={queryUserId || undefined}
                             />
                         </div>
                     </div>

@@ -5,14 +5,14 @@ import type { Nominee } from "@/types/types"
 
 interface MovieListProps {
     seenMovies: Set<string>;
-    toggleMovieSeen: (id: string) => void;
+    toggleMovieSeenAction: (id: string) => void;
     nominees: Nominee[];
     readOnly?: boolean;
 }
 
 export function MovieList({
                               seenMovies,
-                              toggleMovieSeen,
+                              toggleMovieSeenAction,
                               nominees,
                               readOnly = false,
                           }: MovieListProps) {
@@ -68,12 +68,12 @@ export function MovieList({
                         } ${readOnly ? 'cursor-default' : ''}`}
                         onClick={() => {
                             if (!readOnly) {
-                                toggleMovieSeen(movie.id)
+                                toggleMovieSeenAction(movie.id)
                             }
                         }}
                         onKeyDown={(e) => {
                             if (!readOnly && e.key === "Enter") {
-                                toggleMovieSeen(movie.id)
+                                toggleMovieSeenAction(movie.id)
                             }
                         }}
                     >
@@ -97,7 +97,7 @@ export function MovieList({
                                 onClick={(e) => {
                                     e.stopPropagation() // Prevent parent onClick from firing
                                     if (!readOnly) {
-                                        toggleMovieSeen(movie.id)
+                                        toggleMovieSeenAction(movie.id)
                                     }
                                 }}
                             >
@@ -107,7 +107,7 @@ export function MovieList({
                                     onChange={(e) => {
                                         e.stopPropagation() // Prevent parent onClick from firing
                                         if (!readOnly) {
-                                            toggleMovieSeen(movie.id)
+                                            toggleMovieSeenAction(movie.id)
                                         }
                                     }}
                                     className="opacity-0 absolute"
