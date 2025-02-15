@@ -1,5 +1,6 @@
 // src/components/CategoryCard/index.tsx
 import { Category } from "@/types/types";
+import {CategoryCardHeader} from "@/components/CategoryCard/Header";
 
 interface Props {
     category: Category;
@@ -23,12 +24,7 @@ export function CategoryCard({ category, seenMovies, updatePick, userPicks, read
     return (
         <div key={category.id} className={containerClasses}>
             {/* Header */}
-            {/* You might update your CategoryCardHeader as needed */}
-            <div className="mb-2">
-                <h3 className="text-lg font-bold">{category.name}</h3>
-                <p className="text-xs text-gray-600">{watched} of {total} watched ({progress}%)</p>
-            </div>
-
+<CategoryCardHeader name={category.name} watched={watched} total={total} progress={progress} />
             {/* Nominees List */}
             <div className="space-y-2">
                 {category.nominees?.map(nominee => (
