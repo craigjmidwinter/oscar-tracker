@@ -6,7 +6,7 @@ import type { User } from '@supabase/supabase-js'
 
 type AuthContextType = {
     user: User | null
-    signIn: (email: string) => Promise<void>
+    signIn: (email: string, redirectUrl: string) => Promise<void>
     signOut: () => Promise<void>
 }
 
@@ -18,8 +18,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const value = useMemo(() => ({
         user,
-        signIn: async (email: string) => {
-            const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`;
+        signIn: async (email: string, redirectUrl: string) => {
             const { error } = await supabase.auth.signInWithOtp({
                 email,
                 options: { emailRedirectTo: redirectUrl }

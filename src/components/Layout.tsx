@@ -10,6 +10,7 @@ import {Nominee} from "@/types/types";
 import {CategoryList} from "@/components/CategoryList";
 import {MovieList} from "@/components/MovieList";
 import {PageHeader} from "@/components/PageHeader";
+import {SettingsModal} from "@/components/SettingsModal";
 
 interface LayoutProps {
     nominees: Nominee[];
@@ -24,6 +25,8 @@ export function Layout({
     const { seenMovies, toggleMovieSeen, setSharedUserId, sharedUserId } = useSeenMovies();
     const [showAuth, setShowAuth] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
+    const [showSettingsModal, setShowSettingsModal] = useState(false);
+    const [displayName, setDisplayName] = useState(user?.user_metadata?.displayName || "");
     const searchParams = useSearchParams();
     const queryUserId = searchParams.get("userId");
 
@@ -37,10 +40,18 @@ export function Layout({
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {showAuth && <AuthModal onCloseAction={() => setShowAuth(false)}/>}
             {showShareModal && user && <ShareModal userId={user.id} onCloseAction={() => setShowShareModal(false)}/>}
+            {showSettingsModal && user && <SettingsModal setDisplayNameAction={setDisplayName} user={user} onCloseAction={() => setShowSettingsModal(false)} />}
 
+            <PageHeader
+                user={user}
+                readOnly={readOnly}
+                shareAction={() => setShowShareModal(true)}
+                settingsAction={() => setShowSettingsModal(true)}
+                signOutAction={signOut}
+                signInAction={() => setShowAuth(true)}
+                displayName={displayName}
+            />
             {/* Header */}
-            <PageHeader user={user} readOnly={readOnly} onClick={() => setShowShareModal(true)} onClick1={signOut}
-                        onClick2={() => setShowAuth(true)}/>
 
             {/* Main Content */}
             <main className="container mx-auto px-4 py-6 flex-grow">

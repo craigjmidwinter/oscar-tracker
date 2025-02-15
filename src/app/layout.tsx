@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-    title: "Awards Tracker",
+    title: "Oscar-Tracker.com",
     description: "Modern platform for tracking and predicting award nominations",
 };
 
