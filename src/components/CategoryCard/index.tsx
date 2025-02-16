@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { Category } from "@/types/types";
 import { CategoryCardHeader } from "@/components/CategoryCard/Header";
@@ -11,7 +11,12 @@ interface Props {
         nomineeId: string,
         type: "think" | "hope"
     ) => void;
-    userPicks: { [categoryId: string]: { think: string | null; hope: string | null } };
+    userPicks: {
+        [categoryId: string]: {
+            think: string | null;
+            hope: string | null;
+        };
+    };
     readOnly?: boolean;
 }
 
@@ -23,12 +28,13 @@ export function CategoryCard({
                                  readOnly = false,
                              }: Props) {
     const total = category.nominees?.length || 0;
-    const watched = category.nominees?.filter((n) => seenMovies.has(n.movie.id)).length || 0;
+    const watched =
+        category.nominees?.filter((n) => seenMovies.has(n.movie.id)).length || 0;
     const progress = Math.round((watched / total) * 100);
 
     // If all nominees are watched, show a golden background
     const containerClasses = `
-    break-inside-avoid p-4 mb-4 rounded-xl shadow-lg relative
+    p-4 rounded-xl shadow-lg relative
     ${
         watched === total
             ? "bg-gradient-to-r from-yellow-200 to-yellow-400 border-4 border-yellow-500"
@@ -36,24 +42,36 @@ export function CategoryCard({
     }
   `;
 
-    // Check if the category has **any** picks set
+    // Check if the category has any picks
     const hasAnyPick =
         userPicks[category.id]?.think != null || userPicks[category.id]?.hope != null;
 
+    // Decide if we want a 2-column layout for nominees
+    const isLargeCategory = total > 5;
+    // If more than 5 nominees, use a 2-column grid layout inside the card
+    const nomineeLayoutClass = isLargeCategory
+        ? "grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2"
+        : "space-y-2 mt-2";
+
     return (
-        <div key={category.id} className={containerClasses}>
+        <div className={containerClasses}>
             {/* Header */}
-            <CategoryCardHeader name={category.name} watched={watched} total={total} progress={progress} />
+            <CategoryCardHeader
+                name={category.name}
+                watched={watched}
+                total={total}
+                progress={progress}
+            />
 
             {/* If in readOnly mode and no picks are set, show a message */}
             {readOnly && !hasAnyPick && (
-                <p className="text-sm text-center text-gray-500 bg-gray-50 rounded-md p-3 my-2">
+                <p className="text-sm text-center text-gray-500 bg-gray-50 rounded-md p-3 mt-2">
                     picks not selected or not shared
                 </p>
             )}
 
             {/* Nominees List */}
-            <div className="space-y-2">
+            <div className={nomineeLayoutClass}>
                 {category.nominees?.map((nominee) => {
                     const isSeen = seenMovies.has(nominee.movie.id);
 
@@ -62,19 +80,19 @@ export function CategoryCard({
                         ? "bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-300"
                         : "bg-gray-50 hover:bg-gray-100";
 
-                    // Decide style for the "🧠" button
+                    // Think pick style
                     const isThinkPick = userPicks[category.id]?.think === nominee.id;
                     const thinkButtonClass = readOnly
-                        ? // In readOnly mode, if not selected, mostly transparent
+                        ? // In readOnly mode, if not selected => mostly transparent
                         isThinkPick
                             ? "bg-blue-500 text-white"
                             : "bg-gray-200 text-gray-600 opacity-25 cursor-not-allowed"
-                        : // Normal interactive style if not readOnly
+                        : // Normal if not readOnly
                         isThinkPick
                             ? "bg-blue-500 text-white"
                             : "bg-gray-200 text-gray-600 hover:bg-blue-100";
 
-                    // Decide style for the "❤️" button
+                    // Hope pick style
                     const isHopePick = userPicks[category.id]?.hope === nominee.id;
                     const hopeButtonClass = readOnly
                         ? isHopePick
@@ -105,7 +123,7 @@ export function CategoryCard({
                                     onClick={() =>
                                         !readOnly && updatePick(category.id, nominee.id, "think")
                                     }
-                                    disabled={readOnly && !isThinkPick} // Only clickable if not readOnly
+                                    disabled={readOnly && !isThinkPick}
                                     className={`p-2 rounded-md transition-colors ${thinkButtonClass}`}
                                 >
                                     <span className="text-sm block">🧠</span>

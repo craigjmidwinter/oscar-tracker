@@ -1,6 +1,6 @@
 export function CategoryCardHeader(props: { name: string, watched: number, total: number, progress: number }) {
     return <div className="flex items-center justify-between mb-4 gap-2">
-        <h2 className="text-xl font-semibold text-gray-800 whitespace-normal header-font">
+        <h2 className="text-3xl font-semibold text-gray-800 whitespace-normal header-font">
             {props.name}
         </h2>
         <div className="flex items-center gap-2 flex-shrink-0">
