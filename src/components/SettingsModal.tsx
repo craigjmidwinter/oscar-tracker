@@ -1,102 +1,105 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/utils/supabase';
-import { X } from 'lucide-react';
-import { User } from '@supabase/supabase-js';
-import debounceFn from 'lodash/debounce';
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/utils/supabase";
+import { X } from "lucide-react";
+import debounceFn from "lodash/debounce";
+import { User } from "@supabase/supabase-js";
 
 interface SettingsModalProps {
     user: User;
     onCloseAction: () => void;
-    setDisplayNameAction: (name: string) => void; // Callback to update PageHeader's displayName
+    setDisplayNameAction: (name: string) => void; // Update parent's displayName in real time
 }
 
-/**
- * This component debounces the update to Supabase so that
- * the input doesn't lose focus on every keystroke.
- * We'll track the displayName in local state and only
- * notify Supabase (and the parent) after the user
- * stops typing (500ms).
- */
-
-export function SettingsModal({ user, onCloseAction, setDisplayNameAction }: SettingsModalProps) {
-    const [localDisplayName, setLocalDisplayName] = useState('');
+export function SettingsModal({
+                                  user,
+                                  onCloseAction,
+                                  setDisplayNameAction,
+                              }: SettingsModalProps) {
+    const [localDisplayName, setLocalDisplayName] = useState("");
     const [seenPublic, setSeenPublic] = useState(false);
     const [picksPublic, setPicksPublic] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    // Fetch current settings when modal opens
+    // Fetch current settings from user_preferences
     useEffect(() => {
         async function fetchUserSettings() {
             setLoading(true);
 
-            // Get user preferences
-            const { data: userProfile } = await supabase
-                .from('user_preferences')
-                .select('seen_public, picks_public')
-                .eq('user_id', user.id)
+            const { data: userProfile, error } = await supabase
+                .from("user_preferences")
+                .select("display_name, seen_public, picks_public")
+                .eq("user_id", user.id)
                 .single();
 
-            if (userProfile) {
+            if (error) {
+                console.error("Error fetching user preferences:", error);
+            } else if (userProfile) {
+                setLocalDisplayName(userProfile.display_name ?? "");
                 setSeenPublic(userProfile.seen_public ?? false);
                 setPicksPublic(userProfile.picks_public ?? false);
             }
 
-            // Get current displayName from supabase auth
-            const { data: userData } = await supabase.auth.getUser();
-            const supabaseDisplayName = userData.user?.user_metadata?.displayName || '';
-            setLocalDisplayName(supabaseDisplayName);
-
             setLoading(false);
         }
+
         fetchUserSettings();
     }, [user.id]);
 
-    // Debounce supabase update
-    const updateDisplayNameInSupabase = useCallback(
+    // Debounce function to update display name in user_preferences
+    const updateDisplayNameDebounced = useCallback(
         debounceFn(async (newName: string) => {
-            // Update in Supabase auth
-            const { error } = await supabase.auth.updateUser({
-                data: { displayName: newName }
-            });
+            const { error } = await supabase
+                .from("user_preferences")
+                .upsert({
+                    user_id: user.id,
+                    display_name: newName,
+                });
 
             if (error) {
-                console.error('Error updating display name:', error);
+                console.error("Error updating display name in user_preferences:", error);
             } else {
-                // After the update is successful, update parent's displayName
+                // Let the parent know so the UI (header) can reflect the new name
                 setDisplayNameAction(newName);
             }
         }, 500),
-        [setDisplayNameAction]
+        [user.id, setDisplayNameAction]
     );
 
-    // Called on every keystroke
-    const handleLocalDisplayNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newName = event.target.value;
-        setLocalDisplayName(newName); // update local state instantly
-        // Debounce the Supabase update
-        updateDisplayNameInSupabase(newName);
+    // Called on every keystroke for display name
+    const handleLocalDisplayNameChange = (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const newName = e.target.value;
+        setLocalDisplayName(newName);
+        updateDisplayNameDebounced(newName);
     };
 
     // Toggling seenPublic
     const toggleSeenPublic = async () => {
         const newValue = !seenPublic;
         setSeenPublic(newValue);
-        await supabase.from('user_preferences').upsert({
+        const { error } = await supabase.from("user_preferences").upsert({
             user_id: user.id,
-            seen_public: newValue
+            seen_public: newValue,
         });
+        if (error) {
+            console.error("Error updating seenPublic:", error);
+        }
     };
 
     // Toggling picksPublic
     const togglePicksPublic = async () => {
         const newValue = !picksPublic;
         setPicksPublic(newValue);
-        await supabase.from('user_preferences').upsert({
+        const { error } = await supabase.from("user_preferences").upsert({
             user_id: user.id,
-            picks_public: newValue
+            picks_public: newValue,
         });
+        if (error) {
+            console.error("Error updating picksPublic:", error);
+        }
     };
 
     return (
@@ -109,9 +112,11 @@ export function SettingsModal({ user, onCloseAction, setDisplayNameAction }: Set
                     </button>
                 </div>
 
-                {/* Display Name Input (debounced update) */}
+                {/* Display Name Input */}
                 <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Display Name
+                    </label>
                     <input
                         type="text"
                         value={localDisplayName}
@@ -123,7 +128,9 @@ export function SettingsModal({ user, onCloseAction, setDisplayNameAction }: Set
 
                 {/* Visibility Toggles */}
                 <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Seen Movies Public</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Seen Movies Public
+                    </label>
                     <label htmlFor="toggle-seen" className="flex items-center cursor-pointer">
                         <input
                             id="toggle-seen"
@@ -133,14 +140,18 @@ export function SettingsModal({ user, onCloseAction, setDisplayNameAction }: Set
                             onChange={toggleSeenPublic}
                         />
                         <div
-                            className={`block w-10 h-6 rounded-full ${seenPublic ? 'bg-green-600' : 'bg-gray-300'}`}
+                            className={`block w-10 h-6 rounded-full ${
+                                seenPublic ? "bg-green-600" : "bg-gray-300"
+                            }`}
                         />
-                        <span className="ml-3 text-sm">{seenPublic ? 'Visible' : 'Hidden'}</span>
+                        <span className="ml-3 text-sm">{seenPublic ? "Visible" : "Hidden"}</span>
                     </label>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Picks Public</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Picks Public
+                    </label>
                     <label htmlFor="toggle-picks" className="flex items-center cursor-pointer">
                         <input
                             id="toggle-picks"
@@ -150,9 +161,11 @@ export function SettingsModal({ user, onCloseAction, setDisplayNameAction }: Set
                             onChange={togglePicksPublic}
                         />
                         <div
-                            className={`block w-10 h-6 rounded-full ${picksPublic ? 'bg-green-600' : 'bg-gray-300'}`}
+                            className={`block w-10 h-6 rounded-full ${
+                                picksPublic ? "bg-green-600" : "bg-gray-300"
+                            }`}
                         />
-                        <span className="ml-3 text-sm">{picksPublic ? 'Visible' : 'Hidden'}</span>
+                        <span className="ml-3 text-sm">{picksPublic ? "Visible" : "Hidden"}</span>
                     </label>
                 </div>
             </div>

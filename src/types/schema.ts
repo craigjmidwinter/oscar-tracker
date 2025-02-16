@@ -164,18 +164,21 @@ export type Database = {
       user_preferences: {
         Row: {
           created_at: string | null
+          display_name: string | null
           picks_public: boolean | null
           seen_public: boolean | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
+          display_name?: string | null
           picks_public?: boolean | null
           seen_public?: boolean | null
           user_id: string
         }
         Update: {
           created_at?: string | null
+          display_name?: string | null
           picks_public?: boolean | null
           seen_public?: boolean | null
           user_id?: string
