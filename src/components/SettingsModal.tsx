@@ -22,7 +22,7 @@ export function SettingsModal({
     const [picksPublic, setPicksPublic] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    // Fetch current settings from user_preferences
+    // 1) On mount, fetch user_preferences for display_name + public toggles
     useEffect(() => {
         async function fetchUserSettings() {
             setLoading(true);
@@ -47,7 +47,7 @@ export function SettingsModal({
         fetchUserSettings();
     }, [user.id]);
 
-    // Debounce function to update display name in user_preferences
+    // 2) Debounce function to update display_name in user_preferences
     const updateDisplayNameDebounced = useCallback(
         debounceFn(async (newName: string) => {
             const { error } = await supabase
@@ -68,15 +68,14 @@ export function SettingsModal({
     );
 
     // Called on every keystroke for display name
-    const handleLocalDisplayNameChange = (
-        e: React.ChangeEvent<HTMLInputElement>
-    ) => {
+    const handleLocalDisplayNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newName = e.target.value;
         setLocalDisplayName(newName);
+        // Debounced upsert to user_preferences
         updateDisplayNameDebounced(newName);
     };
 
-    // Toggling seenPublic
+    // 3) Toggling seenPublic
     const toggleSeenPublic = async () => {
         const newValue = !seenPublic;
         setSeenPublic(newValue);
@@ -89,7 +88,7 @@ export function SettingsModal({
         }
     };
 
-    // Toggling picksPublic
+    // 4) Toggling picksPublic
     const togglePicksPublic = async () => {
         const newValue = !picksPublic;
         setPicksPublic(newValue);
@@ -105,6 +104,7 @@ export function SettingsModal({
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                {/* Modal Header */}
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold">Settings</h2>
                     <button onClick={onCloseAction} className="text-gray-500 hover:text-gray-700">
@@ -144,7 +144,9 @@ export function SettingsModal({
                                 seenPublic ? "bg-green-600" : "bg-gray-300"
                             }`}
                         />
-                        <span className="ml-3 text-sm">{seenPublic ? "Visible" : "Hidden"}</span>
+                        <span className="ml-3 text-sm">
+              {seenPublic ? "Visible" : "Hidden"}
+            </span>
                     </label>
                 </div>
 
@@ -165,7 +167,9 @@ export function SettingsModal({
                                 picksPublic ? "bg-green-600" : "bg-gray-300"
                             }`}
                         />
-                        <span className="ml-3 text-sm">{picksPublic ? "Visible" : "Hidden"}</span>
+                        <span className="ml-3 text-sm">
+              {picksPublic ? "Visible" : "Hidden"}
+            </span>
                     </label>
                 </div>
             </div>
