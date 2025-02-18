@@ -11,6 +11,7 @@ import { CategoryList } from "@/components/CategoryList";
 import { MovieList } from "@/components/MovieList";
 import { PageHeader } from "@/components/PageHeader";
 import { SettingsModal } from "@/components/SettingsModal";
+import { supabase } from "@/utils/supabase";
 
 interface LayoutProps {
     nominees: Nominee[];
@@ -25,10 +26,12 @@ export function Layout({ nominees, readOnly: readOnlyProp }: LayoutProps) {
     const [showShareModal, setShowShareModal] = useState(false);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
 
-    // The logged-in user's display name (fetched from user_preferences or user_metadata).
+    // Display name for the *logged in* user
     const [displayName, setDisplayName] = useState(user?.user_metadata?.displayName || "");
 
-    // Determine readOnly by checking if there's a sharedUserId
+    // If reading someone else's page, we fetch from user_preferences:
+    const [sharedDisplayName, setSharedDisplayName] = useState("");
+
     const searchParams = useSearchParams();
     const queryUserId = searchParams.get("userId");
 
@@ -36,7 +39,43 @@ export function Layout({ nominees, readOnly: readOnlyProp }: LayoutProps) {
         setSharedUserId(queryUserId);
     }, [queryUserId, setSharedUserId]);
 
+    // Are we actually in read-only mode for a *different* user?
     const readOnly = readOnlyProp ?? Boolean(sharedUserId);
+
+    // If readOnly AND it's not the same user, fetch display_name from user_preferences
+    useEffect(() => {
+        async function fetchSharedDisplayName(userId: string) {
+            const { data, error } = await supabase
+                .from("user_preferences")
+                .select("display_name")
+                .eq("user_id", userId)
+                .single();
+
+            if (error) {
+                console.error("Error fetching shared user's displayName:", error);
+                setSharedDisplayName("Unknown User");
+            } else {
+                setSharedDisplayName(data?.display_name || "Unknown User");
+            }
+        }
+
+        if (readOnly && queryUserId && queryUserId !== user?.id) {
+            // truly a different user’s page
+            fetchSharedDisplayName(queryUserId);
+        } else {
+            setSharedDisplayName(""); // reset if not needed
+        }
+    }, [readOnly, queryUserId, user?.id]);
+
+    // Decide which display name to show in the subheading
+    let subheadingName = displayName;
+    if (readOnly && queryUserId && queryUserId !== user?.id) {
+        // If truly another user
+        subheadingName = sharedDisplayName;
+    } else if (!displayName && user) {
+        // fallback to user’s email if the user has no displayName
+        subheadingName = user.email?.split("@")[0] || "You";
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -57,7 +96,7 @@ export function Layout({ nominees, readOnly: readOnlyProp }: LayoutProps) {
             <PageHeader
                 user={user}
                 readOnly={readOnly}
-                displayName={displayName}
+                displayName={displayName} // the logged-in user’s display name
                 shareAction={() => setShowShareModal(true)}
                 settingsAction={() => setShowSettingsModal(true)}
                 signOutAction={signOut}
@@ -67,13 +106,13 @@ export function Layout({ nominees, readOnly: readOnlyProp }: LayoutProps) {
             {/* Subheading / Big Title */}
             <div className="container mx-auto px-4 mt-4 mb-6 text-center">
                 {user ? (
-                    readOnly ? (
+                    readOnly && queryUserId && queryUserId !== user.id ? (
                         <h2 className="text-3xl font-extrabold text-gray-800">
-                            {`Viewing {displayName || user.email?.split("@")[0]}'s Oscar Ballot`}
+                            {`Viewing ${subheadingName}'s Oscar Ballot`}
                         </h2>
                     ) : (
                         <h2 className="text-3xl font-extrabold text-gray-800">
-                            {`${displayName || user.email?.split("@")[0]}'s Oscar Ballot`}
+                            {`${subheadingName}'s Oscar Ballot`}
                         </h2>
                     )
                 ) : (
@@ -115,8 +154,7 @@ export function Layout({ nominees, readOnly: readOnlyProp }: LayoutProps) {
                                 seenMovies={seenMovies}
                                 nominees={nominees}
                                 readOnly={readOnly}
-                                // If your CategoryList also needs sharedUserId for picks, pass it:
-                                // sharedUserId={sharedUserId}
+                                sharedUserId={sharedUserId ?? undefined}
                             />
                         </div>
                     </div>
@@ -126,10 +164,7 @@ export function Layout({ nominees, readOnly: readOnlyProp }: LayoutProps) {
             <footer className="bg-gray-100 py-4 text-center text-gray-600 text-sm">
                 <p>
                     Sponsored by{" "}
-                    <a
-                        href="https://bravooutsider.com"
-                        className="text-blue-600 hover:underline"
-                    >
+                    <a href="https://bravooutsider.com" className="text-blue-600 hover:underline">
                         The Bravo Outsider Podcast
                     </a>
                 </p>
