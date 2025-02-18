@@ -87,38 +87,38 @@ export function MovieList({
                         </div>
 
                         <div className="flex-shrink-0">
-                            {/* Checkbox Wrapper */}
-                            <div
-                                className={`w-5 h-5 border rounded-md flex items-center justify-center transition-colors ${
+                            {/* Wrap checkbox in a label for improved click handling */}
+                            <label
+                                className={`relative w-5 h-5 border rounded-md flex items-center justify-center transition-colors ${
                                     seenMovies.has(movie.id)
                                         ? 'border-green-500 bg-green-500'
                                         : 'border-gray-300 group-hover:border-gray-400 bg-white'
                                 } ${readOnly ? '' : 'cursor-pointer'}`}
-                                onClick={(e) => {
-                                    e.stopPropagation() // Prevent parent onClick from firing
-                                    if (!readOnly) {
-                                        toggleMovieSeenAction(movie.id)
-                                    }
-                                }}
+                                onClick={(e) => e.stopPropagation()} // prevent parent's click
                             >
                                 <input
                                     type="checkbox"
                                     checked={seenMovies.has(movie.id)}
                                     onChange={(e) => {
-                                        e.stopPropagation() // Prevent parent onClick from firing
+                                        e.stopPropagation();
                                         if (!readOnly) {
-                                            toggleMovieSeenAction(movie.id)
+                                            toggleMovieSeenAction(movie.id);
                                         }
                                     }}
-                                    className="opacity-0 absolute"
+                                    className="absolute inset-0 opacity-0 z-10"
                                     disabled={readOnly}
                                 />
                                 {seenMovies.has(movie.id) && (
-                                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg
+                                        className="w-3 h-3 text-white z-0 pointer-events-none"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                     </svg>
                                 )}
-                            </div>
+                            </label>
                         </div>
                     </div>
                 ))}

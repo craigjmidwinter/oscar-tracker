@@ -1,5 +1,6 @@
 import { User } from "@supabase/supabase-js";
 import { LogIn, Share, Settings } from "lucide-react";
+import Image from "next/image";
 
 interface PageHeaderProps {
     user: User | null;
@@ -22,19 +23,26 @@ export function PageHeader({
                            }: PageHeaderProps) {
     return (
         <header className="bg-white shadow-md py-4">
-            <div className="container mx-auto px-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                {/* Left side: Title + Subtitle */}
-                <div className="flex flex-col">
-                    <h1 className="text-4xl font-bold header-font">oscar-tracker.com</h1>
+            <div className="container mx-auto px-4 flex flex-col md:flex-row md:items-center md:justify-between">
+                {/* Left side: Title + Logo */}
+                <div className="flex items-center gap-3">
+                    <Image
+                        src="/oscar50.webp"
+                        height={50}
+                        width={50}
+                        alt="oscar statuette"
+                        className="h-12 w-12 object-contain"
+                    />
+                    <h1 className="text-3xl font-bold header-font">oscar-tracker.com</h1>
                 </div>
 
                 {/* Right side: Controls (Share, Settings, etc.) */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 mt-4 md:mt-0">
                     {user ? (
                         <>
-              <span className="text-sm text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full">
-                👋 {displayName || user.email?.split("@")[0]}
-              </span>
+                            <span className="text-sm text-gray-700 bg-gray-100 px-3 py-1.5 rounded-full">
+                                👋 {displayName || user.email?.split("@")[0]}
+                            </span>
 
                             {/* Share Button (hidden in readOnly mode) */}
                             {!readOnly && (
