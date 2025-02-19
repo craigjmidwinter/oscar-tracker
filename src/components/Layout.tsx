@@ -20,29 +20,45 @@ interface LayoutProps {
 
 export function Layout({ nominees, readOnly: readOnlyProp }: LayoutProps) {
     const { user, signOut } = useAuth();
-    const { seenMovies, toggleMovieSeen, setSharedUserId, sharedUserId } = useSeenMovies();
+    const {
+        seenMovies,
+        setSeenMovies,
+        toggleMovieSeen,
+        setSharedUserId,
+        sharedUserId,
+    } = useSeenMovies();
 
     const [showAuth, setShowAuth] = useState(false);
     const [showShareModal, setShowShareModal] = useState(false);
     const [showSettingsModal, setShowSettingsModal] = useState(false);
 
-    // Display name for the *logged in* user
-    const [displayName, setDisplayName] = useState(user?.user_metadata?.displayName || "");
-
-    // If reading someone else's page, we fetch from user_preferences:
+    // Display name for the logged‑in user
+    const [displayName, setDisplayName] = useState(
+        user?.user_metadata?.displayName || ""
+    );
+    // Shared display name for someone else's page
     const [sharedDisplayName, setSharedDisplayName] = useState("");
 
     const searchParams = useSearchParams();
     const queryUserId = searchParams.get("userId");
 
+    // Update sharedUserId in context from the URL query param.
     useEffect(() => {
         setSharedUserId(queryUserId);
     }, [queryUserId, setSharedUserId]);
 
-    // Are we actually in read-only mode for a *different* user?
-    const readOnly = readOnlyProp ?? Boolean(sharedUserId);
+    // Determine readOnly mode: true if a userId is in the URL and it’s not your own.
+    const readOnly =
+        readOnlyProp ?? Boolean(queryUserId && queryUserId !== user?.id);
 
-    // If readOnly AND it's not the same user, fetch display_name from user_preferences
+    // Immediately clear seen movies if viewing someone else's page to avoid showing your picks.
+    useEffect(() => {
+        if (readOnly && queryUserId && queryUserId !== user?.id) {
+            setSeenMovies(new Set());
+        }
+    }, [readOnly, queryUserId, user?.id, setSeenMovies]);
+
+    // Fetch the shared user's display name if we are in readOnly mode for a different user.
     useEffect(() => {
         async function fetchSharedDisplayName(userId: string) {
             const { data, error } = await supabase
@@ -60,20 +76,17 @@ export function Layout({ nominees, readOnly: readOnlyProp }: LayoutProps) {
         }
 
         if (readOnly && queryUserId && queryUserId !== user?.id) {
-            // truly a different user’s page
             fetchSharedDisplayName(queryUserId);
         } else {
-            setSharedDisplayName(""); // reset if not needed
+            setSharedDisplayName("");
         }
     }, [readOnly, queryUserId, user?.id]);
 
-    // Decide which display name to show in the subheading
+    // Decide which name to show in the header.
     let subheadingName = displayName;
     if (readOnly && queryUserId && queryUserId !== user?.id) {
-        // If truly another user
         subheadingName = sharedDisplayName;
     } else if (!displayName && user) {
-        // fallback to user’s email if the user has no displayName
         subheadingName = user.email?.split("@")[0] || "You";
     }
 
@@ -96,7 +109,7 @@ export function Layout({ nominees, readOnly: readOnlyProp }: LayoutProps) {
             <PageHeader
                 user={user}
                 readOnly={readOnly}
-                displayName={displayName} // the logged-in user’s display name
+                displayName={displayName}
                 shareAction={() => setShowShareModal(true)}
                 settingsAction={() => setShowSettingsModal(true)}
                 signOutAction={signOut}
